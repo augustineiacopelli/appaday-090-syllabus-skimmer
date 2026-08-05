@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Syllabus Skimmer &middot; AppADay 090</title>
+<meta name="description" content="Upload a syllabus PDF or paste the text and get a clean summary card: key dates, grading breakdown, required materials, and the attendance and AI policies pulled out and organized.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f2ea;
+    --paper-2: #fffdf9;
+    --ink: #1c1a17;
+    --ink-2: #4a463f;
+    --ink-3: #837c70;
+    --rule: #e2dacb;
+    --rule-2: #cfc4ae;
+    --teal: #0e6a60;
+    --teal-soft: #d9ebe7;
+    --amber: #c8801c;
+    --amber-soft: #f6e6cd;
+    --rust: #a8402c;
+    --rust-soft: #f3ddd7;
+    --slate: #4c5a6b;
+    --slate-soft: #e0e6ed;
+    --violet: #6a4a86;
+    --violet-soft: #e7dcf1;
+    --shadow: 0 1px 2px rgba(28,26,23,.06), 0 8px 24px rgba(28,26,23,.07);
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: var(--paper);
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(14,106,96,.06), transparent 42%),
+      radial-gradient(circle at 88% 0%, rgba(200,128,28,.07), transparent 40%);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  h1, h2, h3 { font-family: 'Fraunces', Georgia, 'Times New Roman', serif; font-weight: 600; margin: 0; letter-spacing: -.01em; }
+
+  button { font: inherit; color: inherit; cursor: pointer; }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(255,253,249,.86);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--rule);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+  .badge-num {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .06em;
+    color: var(--paper-2);
+    background: var(--ink);
+    padding: 5px 9px;
+    border-radius: 7px;
+    flex: 0 0 auto;
+  }
+  .topbar h1 { font-size: 19px; flex: 1 1 auto; min-width: 0; }
+  .topbar h1 span { display: block; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+  .icon-btn {
+    flex: 0 0 auto;
+    width: 40px; height: 40px;
+    display: grid; place-items: center;
+    background: transparent;
+    border: 1px solid var(--rule-2);
+    border-radius: 10px;
+    font-size: 17px;
+    transition: background .15s, border-color .15s;
+  }
+  .icon-btn:hover { background: var(--paper); border-color: var(--ink-3); }
+  .icon-btn.dot { position: relative; }
+  .icon-btn.dot::after {
+    content: "";
+    position: absolute; top: 6px; right: 6px;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--rust);
+  }
+
+  /* ---------- layout ---------- */
+  main {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 20px 16px 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  /* ---------- input panel ---------- */
+  .panel {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+  }
+  .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .panel-head h2 { font-size: 17px; }
+  .panel-head p { margin: 0; font-size: 13px; color: var(--ink-3); }
+
+  /* ---------- file drop ---------- */
+  .dropzone {
+    border: 1.5px dashed var(--rule-2);
+    border-radius: 11px;
+    background: linear-gradient(var(--paper), #f2ece0);
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    margin-bottom: 14px;
+  }
+  .dropzone:hover { border-color: var(--teal); background: #eef5f3; }
+  .dropzone.over { border-color: var(--teal); background: var(--teal-soft); border-style: solid; }
+  .dropzone .dz-icon { font-size: 22px; line-height: 1; }
+  .dropzone .dz-main { font-size: 14.5px; font-weight: 600; margin-top: 6px; }
+  .dropzone .dz-sub { font-size: 12.5px; color: var(--ink-3); margin-top: 3px; }
+  .dropzone .dz-main u { color: var(--teal); text-underline-offset: 2px; }
+
+  .filechip {
+    display: flex; align-items: center; gap: 11px;
+    border: 1px solid var(--teal);
+    background: var(--teal-soft);
+    border-radius: 11px;
+    padding: 12px 13px;
+    margin-bottom: 14px;
+  }
+  .filechip .fc-icon { font-size: 20px; flex: 0 0 auto; }
+  .filechip .fc-body { flex: 1 1 auto; min-width: 0; }
+  .filechip .fc-name { font-size: 14.5px; font-weight: 600; word-break: break-all; }
+  .filechip .fc-meta { font-size: 12.5px; color: #0b544c; }
+  .filechip .fc-drop {
+    flex: 0 0 auto;
+    background: transparent; border: 1px solid rgba(11,84,76,.35);
+    color: #0b544c; border-radius: 8px; padding: 5px 10px; font-size: 12.5px; font-weight: 600;
+  }
+  .filechip .fc-drop:hover { background: rgba(11,84,76,.1); }
+
+  .or-rule { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; color: var(--ink-3); font-size: 11.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+  .or-rule::before, .or-rule::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--rule); }
+
+  textarea {
+    width: 100%;
+    min-height: 200px;
+    resize: vertical;
+    padding: 14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--rule-2);
+    border-radius: 10px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  textarea:focus { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-soft); }
+
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+  .btn {
+    border: 1px solid var(--rule-2);
+    background: var(--paper);
+    border-radius: 10px;
+    padding: 10px 15px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background .15s, border-color .15s, transform .08s;
+  }
+  .btn:hover { background: #efe9dc; border-color: var(--ink-3); }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #fff;
+    font-weight: 600;
+    padding: 11px 22px;
+  }
+  .btn-primary:hover { background: #0b564e; border-color: #0b564e; }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  .counter { margin-left: auto; font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+  .notice {
+    margin-top: 12px;
+    padding: 11px 13px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    border: 1px solid var(--rust-soft);
+    background: #fdf3f0;
+    color: #7d2f1f;
+  }
+  .notice.info { border-color: var(--teal-soft); background: #edf6f4; color: #0b544c; }
+  .hidden { display: none !important; }
+
+  /* ---------- loading ---------- */
+  .loading { display: flex; align-items: center; gap: 12px; padding: 26px 18px; justify-content: center; color: var(--ink-2); font-size: 14.5px; }
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2.5px solid var(--rule-2);
+    border-top-color: var(--teal);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- results ---------- */
+  .results { display: flex; flex-direction: column; gap: 18px; }
+
+  .sheet {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .sheet-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--rule);
+    background: linear-gradient(var(--paper-2), #fbf7f0);
+  }
+  .sheet-head h3 { font-size: 15.5px; }
+  .sheet-head .tag {
+    margin-left: auto;
+    font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .sheet-body { padding: 16px 18px 18px; }
+
+  /* course header sheet */
+  .course-title { font-family: 'Fraunces', Georgia, serif; font-size: clamp(24px, 5vw, 34px); font-weight: 700; line-height: 1.15; margin: 0 0 4px; }
+  .course-sub { font-size: 14px; color: var(--ink-2); margin: 0 0 16px; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .fact { border-left: 3px solid var(--rule-2); padding-left: 11px; }
+  .fact dt { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 2px; }
+  .fact dd { margin: 0; font-size: 14.5px; font-weight: 500; }
+
+  /* grading */
+  .weightbar { display: flex; height: 16px; border-radius: 8px; overflow: hidden; border: 1px solid var(--rule-2); margin-bottom: 16px; background: var(--paper); }
+  .weightbar i { display: block; height: 100%; }
+  .gradelist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .gradelist li { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px dashed var(--rule); font-size: 14.5px; }
+  .gradelist li:last-child { border-bottom: 0; }
+  .swatch { width: 11px; height: 11px; border-radius: 3px; flex: 0 0 auto; }
+  .gradelist .w { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; font-family: 'Fraunces', Georgia, serif; }
+  .sumline { margin-top: 12px; font-size: 13px; color: var(--ink-3); }
+  .sumline.warn { color: var(--rust); font-weight: 500; }
+
+  .scale { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--rule); }
+  .scale span {
+    font-size: 12.5px; font-weight: 500;
+    background: var(--paper); border: 1px solid var(--rule-2);
+    padding: 4px 9px; border-radius: 999px;
+  }
+  .scale span b { font-family: 'Fraunces', Georgia, serif; }
+
+  /* dates */
+  .filters { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+  .chip {
+    border: 1px solid var(--rule-2); background: var(--paper);
+    border-radius: 999px; padding: 5px 12px; font-size: 12.5px; font-weight: 500;
+    transition: background .15s, border-color .15s, color .15s;
+  }
+  .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper-2); }
+
+  .timeline { list-style: none; margin: 0; padding: 0; }
+  .timeline li { display: flex; gap: 13px; padding: 11px 0; border-bottom: 1px solid var(--rule); }
+  .timeline li:last-child { border-bottom: 0; }
+  .tl-date {
+    flex: 0 0 78px;
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 13px; font-weight: 600; line-height: 1.3;
+    padding-top: 2px;
+    color: var(--ink-2);
+  }
+  .tl-body { flex: 1 1 auto; min-width: 0; }
+  .tl-body .lbl { font-size: 14.5px; font-weight: 500; }
+  .tl-body .note { font-size: 13px; color: var(--ink-3); margin-top: 2px; }
+  .pill {
+    display: inline-block; margin-top: 5px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 999px;
+  }
+  .pill.exam { background: var(--rust-soft); color: #8b3423; }
+  .pill.assignment { background: var(--teal-soft); color: #0b544c; }
+  .pill.deadline { background: var(--amber-soft); color: #8a5710; }
+  .pill.holiday { background: var(--slate-soft); color: #3b4655; }
+  .pill.other { background: #e9e3d6; color: var(--ink-2); }
+
+  /* materials */
+  .materials { list-style: none; margin: 0; padding: 0; }
+  .materials li { display: flex; gap: 11px; padding: 10px 0; border-bottom: 1px dashed var(--rule); }
+  .materials li:last-child { border-bottom: 0; }
+  .mark { flex: 0 0 auto; font-size: 12px; font-weight: 700; letter-spacing: .05em; padding: 2px 8px; border-radius: 6px; height: fit-content; margin-top: 2px; }
+  .mark.req { background: var(--rust-soft); color: #8b3423; }
+  .mark.opt { background: var(--slate-soft); color: #3b4655; }
+  .materials .m-name { font-size: 14.5px; font-weight: 500; }
+  .materials .m-note { font-size: 13px; color: var(--ink-3); }
+
+  /* policies */
+  .policies { display: grid; gap: 14px; }
+  .policy { border: 1px solid var(--rule); border-radius: 11px; padding: 13px 14px; background: var(--paper); }
+  .policy h4 { margin: 0 0 5px; font-size: 12px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 7px; }
+  .policy p { margin: 0; font-size: 14.5px; }
+  .policy.flag-ai { border-color: var(--violet); background: linear-gradient(var(--paper-2), #f7f2fb); }
+  .policy.flag-ai h4 { color: var(--violet); }
+  .muted { color: var(--ink-3); font-style: italic; }
+
+  /* watch list */
+  .watch { list-style: none; margin: 0; padding: 0; }
+  .watch li { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--rule); font-size: 14.5px; }
+  .watch li:last-child { border-bottom: 0; }
+  .watch li::before { content: "!"; flex: 0 0 20px; height: 20px; display: grid; place-items: center; background: var(--amber-soft); color: #8a5710; font-weight: 700; font-size: 12px; border-radius: 6px; margin-top: 1px; }
+
+  /* export row */
+  .exportrow { display: flex; flex-wrap: wrap; gap: 10px; }
+
+  /* ---------- modal ---------- */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(28,26,23,.5);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    display: grid; place-items: center;
+    padding: 16px;
+    z-index: 60;
+  }
+  .modal {
+    width: 100%; max-width: 470px;
+    background: var(--paper-2);
+    border-radius: var(--radius);
+    border: 1px solid var(--rule-2);
+    box-shadow: 0 24px 60px rgba(0,0,0,.28);
+    padding: 20px;
+    max-height: 88dvh;
+    overflow-y: auto;
+  }
+  .modal h2 { font-size: 19px; margin-bottom: 4px; }
+  .modal > p { margin: 0 0 16px; font-size: 13.5px; color: var(--ink-3); }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 5px; }
+  .field input {
+    width: 100%; padding: 11px 12px;
+    font: inherit; font-size: 14.5px;
+    background: var(--paper);
+    border: 1px solid var(--rule-2); border-radius: 9px;
+    color: var(--ink); outline: none;
+  }
+  .field input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-soft); }
+  .field .hint { font-size: 12.5px; color: var(--ink-3); margin-top: 5px; }
+  .field .hint a { color: var(--teal); }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+
+  /* ---------- footer ---------- */
+  footer {
+    padding: 20px 16px 28px;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    border-top: 1px solid var(--rule);
+  }
+  footer a { color: var(--teal); font-weight: 500; }
+
+  .empty { text-align: center; padding: 34px 18px; color: var(--ink-3); }
+  .empty .big { font-size: 30px; margin-bottom: 8px; }
+  .empty p { margin: 0 auto; max-width: 44ch; font-size: 14.5px; }
+
+  @media (min-width: 760px) {
+    .policies { grid-template-columns: 1fr 1fr; }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+  }
+
+  @media print {
+    .topbar, .panel, .exportrow, .filters, footer { display: none !important; }
+    body { background: #fff; }
+    .sheet { box-shadow: none; break-inside: avoid; }
+    main { padding: 0; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <span class="badge-num">090</span>
+  <h1>Syllabus Skimmer<span>AppADay</span></h1>
+  <button class="icon-btn" id="gear" type="button" aria-label="Settings" title="Settings">&#9881;</button>
+</header>
+
+<main>
+
+  <section class="panel" id="input-panel">
+    <div class="panel-head">
+      <h2>Add the syllabus</h2>
+      <p>Upload the PDF or paste the text. Messy formatting is fine.</p>
+    </div>
+
+    <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Upload a syllabus file">
+      <div class="dz-icon">&#128206;</div>
+      <div class="dz-main">Drop a syllabus here or <u>choose a file</u></div>
+      <div class="dz-sub">PDF, plain text, Markdown, or a photo of a printed page. Up to 25 MB.</div>
+    </div>
+    <input type="file" id="fileinput" class="hidden" accept=".pdf,.txt,.md,.markdown,.png,.jpg,.jpeg,.webp,.gif,application/pdf,text/plain,image/*">
+    <div id="filechip-slot"></div>
+
+    <div class="or-rule">or paste it</div>
+    <textarea id="syllabus" placeholder="Paste the full text of your course syllabus here, then press Skim it. Page numbers, headers, and broken line breaks are fine."></textarea>
+    <div class="actions">
+      <button class="btn btn-primary" id="run" type="button">Skim it</button>
+      <button class="btn" id="sample" type="button">Load sample</button>
+      <button class="btn" id="clear" type="button">Clear</button>
+      <span class="counter" id="counter">0 characters</span>
+    </div>
+    <div class="notice hidden" id="notice"></div>
+  </section>
+
+  <section id="output" aria-live="polite">
+    <div class="empty" id="empty">
+      <div class="big">&#128209;</div>
+      <p>Your summary card will appear here: key dates, the grading breakdown, required materials, and the attendance and AI policies pulled out of the fine print.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Day 090 of <a href="https://augustineiacopelli.github.io/appaday/">AppADay</a> by Augustine Iacopelli.
+  <br>Your syllabus text is sent directly from your browser to the Anthropic API and is never stored on a server.
+</footer>
+
+<div class="overlay hidden" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <h2 id="modal-title">Settings</h2>
+    <p>Stored in this browser only. Never committed, never sent anywhere except to Anthropic.</p>
+    <div class="field">
+      <label for="key">Anthropic API key</label>
+      <input id="key" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+      <div class="hint">Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</div>
+    </div>
+    <div class="field">
+      <label for="session">Session name</label>
+      <input id="session" type="text" placeholder="Fall 2026 MSBA" autocomplete="off">
+      <div class="hint">Optional label printed on exported summaries.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancel" type="button">Cancel</button>
+      <button class="btn btn-primary" id="save" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var CLAUDE_MODEL = 'claude-sonnet-5';
+  var API_URL = 'https://api.anthropic.com/v1/messages';
+  var K_KEY = 'appaday090-key';
+  var K_SESSION = 'appaday090-session';
+  var K_LAST = 'appaday090-last';
+  var MAX_CHARS = 60000;
+  var MAX_FILE_BYTES = 25 * 1024 * 1024;
+
+  var SEG_COLORS = ['#0e6a60', '#c8801c', '#a8402c', '#4c5a6b', '#6a4a86', '#3f7d4e', '#96683a', '#2f6d86', '#8a3a63', '#5c6b2f'];
+
+  /* ---------- storage helpers ---------- */
+  function load(k, fallback) {
+    try { var v = localStorage.getItem(k); return v === null ? fallback : v; }
+    catch (e) { return fallback; }
+  }
+  function save(k, v) {
+    try { localStorage.setItem(k, v); } catch (e) { /* private mode */ }
+  }
+
+  /* ---------- element refs ---------- */
+  var $ = function (id) { return document.getElementById(id); };
+  var ta = $('syllabus'), counter = $('counter'), notice = $('notice');
+  var runBtn = $('run'), sampleBtn = $('sample'), clearBtn = $('clear');
+  var out = $('output'), overlay = $('overlay'), gear = $('gear');
+  var keyIn = $('key'), sessIn = $('session');
+
+  var current = null;
+  var dateFilter = 'all';
+
+  /* ---------- settings ---------- */
+  function hasKey() { return load(K_KEY, '').trim().length > 0; }
+
+  function markGear() {
+    if (hasKey()) { gear.className = 'icon-btn'; }
+    else { gear.className = 'icon-btn dot'; }
+  }
+
+  function openSettings() {
+    keyIn.value = load(K_KEY, '');
+    sessIn.value = load(K_SESSION, '');
+    overlay.classList.remove('hidden');
+    setTimeout(function () { keyIn.focus(); }, 40);
+  }
+  function closeSettings() { overlay.classList.add('hidden'); }
+
+  gear.addEventListener('click', openSettings);
+  $('cancel').addEventListener('click', closeSettings);
+  $('save').addEventListener('click', function () {
+    save(K_KEY, keyIn.value.trim());
+    save(K_SESSION, sessIn.value.trim());
+    markGear();
+    closeSettings();
+    showNotice('Settings saved.', 'info');
+  });
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) { closeSettings(); } });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !overlay.classList.contains('hidden')) { closeSettings(); }
+  });
+
+  /* ---------- notices ---------- */
+  var noticeTimer = null;
+  function showNotice(msg, kind) {
+    notice.textContent = msg;
+    notice.className = 'notice' + (kind === 'info' ? ' info' : '');
+    if (noticeTimer) { clearTimeout(noticeTimer); }
+    noticeTimer = setTimeout(function () { notice.className = 'notice hidden'; }, 7000);
+  }
+  function hideNotice() {
+    if (noticeTimer) { clearTimeout(noticeTimer); }
+    notice.className = 'notice hidden';
+  }
+
+  /* ---------- counter ---------- */
+  function updateCounter() {
+    var n = ta.value.length;
+    counter.textContent = n.toLocaleString() + (n === 1 ? ' character' : ' characters');
+    counter.style.color = n > MAX_CHARS ? '#a8402c' : '';
+  }
+  ta.addEventListener('input', updateCounter);
+
+  clearBtn.addEventListener('click', function () {
+    ta.value = '';
+    clearAttachment();
+    updateCounter();
+    hideNotice();
+    ta.focus();
+  });
+
+  /* ---------- escaping ---------- */
+  function esc(s) {
+    return String(s === undefined || s === null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function has(v) {
+    if (v === undefined || v === null) { return false; }
+    var s = String(v).trim();
+    if (!s) { return false; }
+    return !/^(n\/a|na|none|not stated|not specified|unknown|not listed|not mentioned)\.?$/i.test(s);
+  }
+  function orMuted(v, fallback) {
+    return has(v) ? esc(v) : '<span class="muted">' + esc(fallback || 'Not stated in the syllabus') + '</span>';
+  }
+
+  /* ---------- the prompt ---------- */
+  var SYSTEM_PROMPT =
+    'You are a precise academic document parser. You read a course syllabus and extract its structure into JSON. ' +
+    'You never invent information. If a field is genuinely absent from the document, use an empty string or an empty array. ' +
+    'You preserve the instructor\'s own wording for policies, condensed to one or two clear sentences, rather than paraphrasing loosely. ' +
+    'Respond with a single JSON object and nothing else: no preamble, no commentary, no markdown code fences.';
+
+  function schemaBlock() {
+    return '{\n' +
+      '  "course": {"title":"", "code":"", "term":"", "credits":"", "modality":"", "meeting":"", "location":"", "description":""},\n' +
+      '  "instructor": {"name":"", "email":"", "phone":"", "office":"", "officeHours":"", "ta":""},\n' +
+      '  "grading": {\n' +
+      '    "scheme": [{"item":"Exams", "weight":30, "note":""}],\n' +
+      '    "scale": [{"grade":"A", "range":"90-100"}]\n' +
+      '  },\n' +
+      '  "dates": [{"iso":"2026-09-03", "display":"Sep 3", "label":"Midterm exam", "note":"", "type":"exam"}],\n' +
+      '  "materials": [{"name":"", "required":true, "note":""}],\n' +
+      '  "policies": {"attendance":"", "ai":"", "lateWork":"", "integrity":"", "communication":"", "accommodations":"", "participation":""},\n' +
+      '  "workload":"",\n' +
+      '  "watch": []\n' +
+      '}\n\n' +
+      'Rules:\n' +
+      '1. "weight" must be a number, the percentage of the final grade. Omit the percent sign. If the syllabus uses points instead of percentages, convert each item to a percentage of the total points and put the raw points in "note".\n' +
+      '2. "type" for each date must be exactly one of: exam, assignment, deadline, holiday, other.\n' +
+      '3. "iso" is YYYY-MM-DD. If the syllabus gives a date without a year, infer the year from the stated term. If no date can be resolved, leave "iso" empty but still fill "display" with whatever the syllabus says, such as "Week 4".\n' +
+      '4. Sort "dates" chronologically. Include every graded deliverable, exam, project milestone, drop deadline, and break listed anywhere in the document.\n' +
+      '5. The "ai" policy is important: capture exactly what is permitted, what is prohibited, and what must be disclosed. If the syllabus is silent on AI or generative tools, return an empty string.\n' +
+      '6. "workload" is one sentence estimating the weekly time commitment, drawn from the syllabus if stated, otherwise inferred from credits and deliverables and prefixed with "Estimated: ".\n' +
+      '7. "watch" is an array of up to five short strings flagging things a student could easily miss: an unusually heavy single assignment weight, a strict no-late-work rule, a required proctoring service, an attendance rule that drops a letter grade, a hard drop deadline, and so on. Each string is one sentence.\n';
+  }
+
+  function buildPrompt(text) {
+    return 'Extract the structure of the course syllabus below into JSON matching this exact shape:\n\n' +
+      schemaBlock() + '\nSYLLABUS:\n"""\n' + text + '\n"""';
+  }
+
+  function buildAttachmentPrompt(extra) {
+    return 'The attached file is a course syllabus. Read all of it, including any tables, schedules, and ' +
+      'fine print in later pages, and extract its structure into JSON matching this exact shape:\n\n' +
+      schemaBlock() +
+      (extra ? '\nThe user added these notes alongside the file. Treat them as part of the source material:\n"""\n' + extra + '\n"""' : '');
+  }
+
+  /* ---------- file attachment ---------- */
+  var attached = null;
+  var dropzone = $('dropzone'), fileinput = $('fileinput'), chipSlot = $('filechip-slot');
+
+  var IMAGE_TYPES = { 'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'webp': 'image/webp', 'gif': 'image/gif' };
+  var TEXT_EXTS = { 'txt': 1, 'md': 1, 'markdown': 1, 'text': 1, 'csv': 1, 'rtf': 1 };
+
+  function extOf(name) {
+    var i = String(name).lastIndexOf('.');
+    return i === -1 ? '' : String(name).slice(i + 1).toLowerCase();
+  }
+
+  function fmtSize(bytes) {
+    if (bytes < 1024) { return bytes + ' B'; }
+    if (bytes < 1048576) { return (bytes / 1024).toFixed(0) + ' KB'; }
+    return (bytes / 1048576).toFixed(1) + ' MB';
+  }
+
+  function clearAttachment() {
+    attached = null;
+    chipSlot.innerHTML = '';
+    dropzone.classList.remove('hidden');
+    fileinput.value = '';
+  }
+
+  function showChip() {
+    dropzone.classList.add('hidden');
+    var icon = attached.kind === 'pdf' ? '&#128196;' : '&#128444;';
+    var label = attached.kind === 'pdf' ? 'PDF' : 'Image';
+    chipSlot.innerHTML = '<div class="filechip"><span class="fc-icon">' + icon + '</span>' +
+      '<span class="fc-body"><span class="fc-name">' + esc(attached.name) + '</span>' +
+      '<span class="fc-meta">' + label + ' &middot; ' + fmtSize(attached.size) + ' &middot; sent to Claude as-is</span></span>' +
+      '<button class="fc-drop" type="button" id="fc-remove">Remove</button></div>';
+    $('fc-remove').addEventListener('click', function () {
+      clearAttachment();
+      showNotice('File removed.', 'info');
+    });
+  }
+
+  function readAsBase64(file) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function () {
+        var s = String(r.result);
+        var comma = s.indexOf(',');
+        resolve(comma === -1 ? s : s.slice(comma + 1));
+      };
+      r.onerror = function () { reject(new Error('That file could not be read.')); };
+      r.readAsDataURL(file);
+    });
+  }
+
+  function readAsText(file) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function () { resolve(String(r.result)); };
+      r.onerror = function () { reject(new Error('That file could not be read.')); };
+      r.readAsText(file);
+    });
+  }
+
+  function acceptFile(file) {
+    if (!file) { return; }
+    var ext = extOf(file.name);
+    var isPdf = ext === 'pdf' || file.type === 'application/pdf';
+    var imgType = IMAGE_TYPES[ext] || (/^image\//.test(file.type || '') ? file.type : null);
+
+    if (file.size > MAX_FILE_BYTES) {
+      showNotice('That file is ' + fmtSize(file.size) + '. The limit is 25 MB. Export a smaller PDF or paste the text instead.');
+      return;
+    }
+
+    if (isPdf) {
+      readAsBase64(file).then(function (b64) {
+        attached = { kind: 'pdf', name: file.name, size: file.size, mediaType: 'application/pdf', data: b64 };
+        showChip();
+        showNotice('PDF attached. Press Skim it.', 'info');
+      })['catch'](function (e) { showNotice(e.message); });
+      return;
+    }
+
+    if (TEXT_EXTS[ext] || /^text\//.test(file.type || '')) {
+      readAsText(file).then(function (txt) {
+        clearAttachment();
+        ta.value = txt;
+        updateCounter();
+        showNotice('Text loaded into the box below. Press Skim it.', 'info');
+      })['catch'](function (e) { showNotice(e.message); });
+      return;
+    }
+
+    if (imgType) {
+      readAsBase64(file).then(function (b64) {
+        attached = { kind: 'image', name: file.name, size: file.size, mediaType: imgType, data: b64 };
+        showChip();
+        showNotice('Image attached. A single clear page works best. Press Skim it.', 'info');
+      })['catch'](function (e) { showNotice(e.message); });
+      return;
+    }
+
+    showNotice('That file type is not supported. Use a PDF, a plain text file, or an image of the page.');
+  }
+
+  dropzone.addEventListener('click', function () { fileinput.click(); });
+  dropzone.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileinput.click(); }
+  });
+  fileinput.addEventListener('change', function (e) {
+    if (e.target.files && e.target.files.length) { acceptFile(e.target.files[0]); }
+  });
+
+  var panel = $('input-panel');
+  ['dragenter', 'dragover'].forEach(function (evt) {
+    panel.addEventListener(evt, function (e) { e.preventDefault(); dropzone.classList.add('over'); });
+  });
+  ['dragleave', 'drop'].forEach(function (evt) {
+    panel.addEventListener(evt, function (e) { e.preventDefault(); dropzone.classList.remove('over'); });
+  });
+  panel.addEventListener('drop', function (e) {
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+      acceptFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  /* ---------- API call ---------- */
+  function skim() {
+    var text = ta.value.trim();
+    if (!attached && !text) { showNotice('Upload a syllabus or paste one first, or press Load sample to try it out.'); ta.focus(); return; }
+    if (!hasKey()) { showNotice('Add your Anthropic API key in Settings first.'); openSettings(); return; }
+    if (!attached && text.length > MAX_CHARS) {
+      showNotice('That is longer than ' + MAX_CHARS.toLocaleString() + ' characters. Trimming to the first ' + MAX_CHARS.toLocaleString() + ' for this pass.', 'info');
+      text = text.slice(0, MAX_CHARS);
+    }
+
+    var content;
+    if (attached) {
+      var block = attached.kind === 'pdf'
+        ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: attached.data } }
+        : { type: 'image', source: { type: 'base64', media_type: attached.mediaType, data: attached.data } };
+      content = [block, { type: 'text', text: buildAttachmentPrompt(text.slice(0, 8000)) }];
+    } else {
+      content = buildPrompt(text);
+    }
+
+    hideNotice();
+    runBtn.disabled = true;
+    runBtn.textContent = 'Skimming';
+    renderLoading(attached ? attached.name : null);
+
+    fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': load(K_KEY, ''),
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: 4000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: content }]
+      })
+    }).then(function (res) {
+      return res.json().then(function (data) { return { ok: res.ok, status: res.status, data: data }; });
+    }).then(function (r) {
+      if (!r.ok) {
+        var m = (r.data && r.data.error && r.data.error.message) ? r.data.error.message : ('Request failed with status ' + r.status + '.');
+        throw new Error(m);
+      }
+      var raw = (r.data.content || [])
+        .filter(function (b) { return b.type === 'text'; })
+        .map(function (b) { return b.text; })
+        .join('\n');
+      var parsed = parseJSON(raw);
+      if (!parsed) { throw new Error('The response could not be read as structured data. Try again, or trim the syllabus to its core sections.'); }
+      current = normalize(parsed);
+      try { save(K_LAST, JSON.stringify(current)); } catch (e) { /* too large */ }
+      dateFilter = 'all';
+      render();
+      out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    })['catch'](function (err) {
+      renderEmpty();
+      showNotice(err && err.message ? err.message : 'Something went wrong reaching the API.');
+    }).then(function () {
+      runBtn.disabled = false;
+      runBtn.textContent = 'Skim it';
+    });
+  }
+
+  function parseJSON(raw) {
+    var s = String(raw || '').replace(/```json/gi, '').replace(/```/g, '').trim();
+    try { return JSON.parse(s); } catch (e) { /* keep trying */ }
+    var a = s.indexOf('{'), b = s.lastIndexOf('}');
+    if (a !== -1 && b > a) {
+      try { return JSON.parse(s.slice(a, b + 1)); } catch (e2) { return null; }
+    }
+    return null;
+  }
+
+  function normalize(d) {
+    var o = {};
+    o.course = d.course || {};
+    o.instructor = d.instructor || {};
+    var g = d.grading || {};
+    o.grading = {
+      scheme: Array.isArray(g.scheme) ? g.scheme.filter(function (x) { return x && has(x.item); }) : [],
+      scale: Array.isArray(g.scale) ? g.scale.filter(function (x) { return x && has(x.grade); }) : []
+    };
+    o.dates = Array.isArray(d.dates) ? d.dates.filter(function (x) { return x && (has(x.label) || has(x.display)); }) : [];
+    o.materials = Array.isArray(d.materials) ? d.materials.filter(function (x) { return x && has(x.name); }) : [];
+    o.policies = d.policies || {};
+    o.workload = d.workload || '';
+    o.watch = Array.isArray(d.watch) ? d.watch.filter(has) : [];
+
+    o.dates.sort(function (a, b) {
+      var ai = has(a.iso) ? a.iso : 'zzzz';
+      var bi = has(b.iso) ? b.iso : 'zzzz';
+      if (ai < bi) { return -1; }
+      if (ai > bi) { return 1; }
+      return 0;
+    });
+    return o;
+  }
+
+  /* ---------- rendering ---------- */
+  function renderLoading(what) {
+    out.innerHTML = '<div class="sheet"><div class="loading"><span class="spinner"></span>' +
+      '<span>Reading ' + (what ? esc(what) : 'the syllabus') + ' and pulling out dates, weights, materials, and policies.</span></div></div>';
+  }
+
+  function renderEmpty() {
+    out.innerHTML = '<div class="empty"><div class="big">&#128209;</div>' +
+      '<p>Your summary card will appear here: key dates, the grading breakdown, required materials, ' +
+      'and the attendance and AI policies pulled out of the fine print.</p></div>';
+  }
+
+  function sheet(title, tag, bodyHTML) {
+    return '<section class="sheet"><div class="sheet-head"><h3>' + title + '</h3>' +
+      (tag ? '<span class="tag">' + tag + '</span>' : '') +
+      '</div><div class="sheet-body">' + bodyHTML + '</div></section>';
+  }
+
+  function fact(label, value) {
+    if (!has(value)) { return ''; }
+    return '<div class="fact"><dt>' + esc(label) + '</dt><dd>' + esc(value) + '</dd></div>';
+  }
+
+  function renderHeader(d) {
+    var c = d.course || {}, i = d.instructor || {};
+    var subBits = [];
+    if (has(c.code)) { subBits.push(esc(c.code)); }
+    if (has(c.term)) { subBits.push(esc(c.term)); }
+    if (has(c.credits)) { subBits.push(esc(c.credits) + (/credit/i.test(String(c.credits)) ? '' : ' credits')); }
+
+    var facts = '';
+    facts += fact('Instructor', i.name);
+    facts += fact('Email', i.email);
+    facts += fact('Office hours', i.officeHours);
+    facts += fact('Office', i.office);
+    facts += fact('Meets', c.meeting);
+    facts += fact('Location', c.location);
+    facts += fact('Modality', c.modality);
+    facts += fact('Teaching assistant', i.ta);
+
+    var body = '<h2 class="course-title">' + (has(c.title) ? esc(c.title) : 'Course summary') + '</h2>';
+    if (subBits.length) { body += '<p class="course-sub">' + subBits.join(' &middot; ') + '</p>'; }
+    if (has(c.description)) { body += '<p style="margin:0 0 16px;font-size:14.5px;color:var(--ink-2);">' + esc(c.description) + '</p>'; }
+    if (facts) { body += '<dl class="facts" style="margin:0;">' + facts + '</dl>'; }
+    if (has(d.workload)) {
+      body += '<p style="margin:16px 0 0;padding-top:14px;border-top:1px solid var(--rule);font-size:14px;">' +
+        '<strong>Workload.</strong> ' + esc(d.workload) + '</p>';
+    }
+    return sheet('At a glance', 'Course', body);
+  }
+
+  function renderGrading(d) {
+    var scheme = d.grading.scheme;
+    if (!scheme.length) { return ''; }
+
+    var total = 0, i;
+    for (i = 0; i < scheme.length; i++) {
+      var w = parseFloat(scheme[i].weight);
+      scheme[i]._w = isNaN(w) ? 0 : w;
+      total += scheme[i]._w;
+    }
+
+    var bar = '';
+    var list = '';
+    var denom = total > 0 ? total : 1;
+    for (i = 0; i < scheme.length; i++) {
+      var s = scheme[i];
+      var col = SEG_COLORS[i % SEG_COLORS.length];
+      var pct = (s._w / denom) * 100;
+      if (s._w > 0) {
+        bar += '<i style="width:' + pct.toFixed(3) + '%;background:' + col + ';" title="' + esc(s.item) + '"></i>';
+      }
+      list += '<li><span class="swatch" style="background:' + col + ';"></span>' +
+        '<span>' + esc(s.item) +
+        (has(s.note) ? '<br><span style="font-size:12.5px;color:var(--ink-3);">' + esc(s.note) + '</span>' : '') +
+        '</span><span class="w">' + (s._w > 0 ? trimNum(s._w) + '%' : '&mdash;') + '</span></li>';
+    }
+
+    var body = '';
+    if (bar) { body += '<div class="weightbar">' + bar + '</div>'; }
+    body += '<ul class="gradelist">' + list + '</ul>';
+
+    var rounded = Math.round(total * 10) / 10;
+    if (rounded === 100) {
+      body += '<p class="sumline">Weights total 100%.</p>';
+    } else if (total > 0) {
+      body += '<p class="sumline warn">Weights total ' + trimNum(rounded) + '%, not 100%. Check the syllabus for a component that was worded differently or extra credit folded in.</p>';
+    }
+
+    if (d.grading.scale.length) {
+      var sc = '<div class="scale">';
+      for (i = 0; i < d.grading.scale.length; i++) {
+        sc += '<span><b>' + esc(d.grading.scale[i].grade) + '</b> ' + esc(d.grading.scale[i].range) + '</span>';
+      }
+      sc += '</div>';
+      body += sc;
+    }
+    return sheet('Grading breakdown', scheme.length + ' components', body);
+  }
+
+  function trimNum(n) {
+    return (Math.round(n * 100) / 100).toString();
+  }
+
+  var TYPES = [
+    { k: 'all', label: 'All' },
+    { k: 'exam', label: 'Exams' },
+    { k: 'assignment', label: 'Assignments' },
+    { k: 'deadline', label: 'Deadlines' },
+    { k: 'holiday', label: 'Breaks' },
+    { k: 'other', label: 'Other' }
+  ];
+
+  function normType(t) {
+    var s = String(t || 'other').toLowerCase();
+    if (s === 'exam' || s === 'assignment' || s === 'deadline' || s === 'holiday') { return s; }
+    return 'other';
+  }
+
+  function renderDates(d) {
+    if (!d.dates.length) { return ''; }
+    var present = {}, i;
+    for (i = 0; i < d.dates.length; i++) { present[normType(d.dates[i].type)] = true; }
+
+    var chips = '<div class="filters">';
+    for (i = 0; i < TYPES.length; i++) {
+      var t = TYPES[i];
+      if (t.k !== 'all' && !present[t.k]) { continue; }
+      chips += '<button class="chip" type="button" data-filter="' + t.k + '" aria-pressed="' +
+        (dateFilter === t.k ? 'true' : 'false') + '">' + t.label + '</button>';
+    }
+    chips += '</div>';
+
+    var rows = '', shown = 0;
+    for (i = 0; i < d.dates.length; i++) {
+      var e = d.dates[i];
+      var ty = normType(e.type);
+      if (dateFilter !== 'all' && ty !== dateFilter) { continue; }
+      shown++;
+      var dsp = has(e.display) ? e.display : (has(e.iso) ? e.iso : 'TBD');
+      rows += '<li><div class="tl-date">' + esc(dsp) + '</div><div class="tl-body">' +
+        '<div class="lbl">' + esc(e.label || dsp) + '</div>' +
+        (has(e.note) ? '<div class="note">' + esc(e.note) + '</div>' : '') +
+        '<span class="pill ' + ty + '">' + ty + '</span>' +
+        '</div></li>';
+    }
+    if (!shown) { rows = '<li><div class="tl-body"><span class="muted">Nothing in that category.</span></div></li>'; }
+
+    return sheet('Key dates', d.dates.length + ' entries', chips + '<ul class="timeline">' + rows + '</ul>');
+  }
+
+  function renderMaterials(d) {
+    if (!d.materials.length) { return ''; }
+    var rows = '';
+    for (var i = 0; i < d.materials.length; i++) {
+      var m = d.materials[i];
+      var req = m.required !== false;
+      rows += '<li><span class="mark ' + (req ? 'req">Required' : 'opt">Optional') + '</span>' +
+        '<span><span class="m-name">' + esc(m.name) + '</span>' +
+        (has(m.note) ? '<br><span class="m-note">' + esc(m.note) + '</span>' : '') + '</span></li>';
+    }
+    return sheet('Materials', d.materials.length + ' items', '<ul class="materials">' + rows + '</ul>');
+  }
+
+  var POLICY_FIELDS = [
+    { k: 'attendance', label: 'Attendance' },
+    { k: 'ai', label: 'AI and generative tools', flag: true },
+    { k: 'lateWork', label: 'Late work' },
+    { k: 'integrity', label: 'Academic integrity' },
+    { k: 'participation', label: 'Participation' },
+    { k: 'communication', label: 'Communication' },
+    { k: 'accommodations', label: 'Accommodations' }
+  ];
+
+  function renderPolicies(d) {
+    var p = d.policies || {};
+    var cards = '', any = false;
+    for (var i = 0; i < POLICY_FIELDS.length; i++) {
+      var f = POLICY_FIELDS[i];
+      var v = p[f.k];
+      var isCore = (f.k === 'attendance' || f.k === 'ai');
+      if (!has(v) && !isCore) { continue; }
+      any = true;
+      cards += '<div class="policy' + (f.flag ? ' flag-ai' : '') + '">' +
+        '<h4>' + esc(f.label) + '</h4>' +
+        '<p>' + orMuted(v, f.k === 'ai' ? 'The syllabus says nothing about AI or generative tools. Ask before you assume.' : 'Not stated in the syllabus') + '</p>' +
+        '</div>';
+    }
+    if (!any) { return ''; }
+    return sheet('Policies', 'Fine print', '<div class="policies">' + cards + '</div>');
+  }
+
+  function renderWatch(d) {
+    if (!d.watch.length) { return ''; }
+    var rows = '';
+    for (var i = 0; i < d.watch.length; i++) {
+      rows += '<li><span>' + esc(d.watch[i]) + '</span></li>';
+    }
+    return sheet('Easy to miss', d.watch.length + ' flags', '<ul class="watch">' + rows + '</ul>');
+  }
+
+  function renderExport() {
+    return '<div class="exportrow">' +
+      '<button class="btn" type="button" id="copy">Copy summary</button>' +
+      '<button class="btn" type="button" id="download">Download .md</button>' +
+      '<button class="btn" type="button" id="printit">Print</button>' +
+      '</div>';
+  }
+
+  function render() {
+    if (!current) { renderEmpty(); return; }
+    var d = current;
+    var html = '<div class="results">';
+    html += renderHeader(d);
+    html += '<div class="split">' + renderGrading(d) + renderMaterials(d) + '</div>';
+    html += renderDates(d);
+    html += renderPolicies(d);
+    html += renderWatch(d);
+    html += renderExport();
+    html += '</div>';
+    out.innerHTML = html;
+    wireResults();
+  }
+
+  function wireResults() {
+    var chips = out.querySelectorAll('.chip');
+    for (var i = 0; i < chips.length; i++) {
+      chips[i].addEventListener('click', function (e) {
+        dateFilter = e.currentTarget.getAttribute('data-filter');
+        render();
+      });
+    }
+    var cp = $('copy'), dl = $('download'), pr = $('printit');
+    if (cp) {
+      cp.addEventListener('click', function () {
+        var text = toMarkdown(current);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () {
+            cp.textContent = 'Copied';
+            setTimeout(function () { cp.textContent = 'Copy summary'; }, 1600);
+          })['catch'](function () { fallbackCopy(text, cp); });
+        } else { fallbackCopy(text, cp); }
+      });
+    }
+    if (dl) {
+      dl.addEventListener('click', function () {
+        var name = (current.course && has(current.course.code)) ? current.course.code : 'syllabus';
+        name = name.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'syllabus';
+        var blob = new Blob([toMarkdown(current)], { type: 'text/markdown' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = name + '-summary.md';
+        document.body.appendChild(a);
+        a.click();
+        if (a.parentNode) { a.parentNode.removeChild(a); }
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      });
+    }
+    if (pr) { pr.addEventListener('click', function () { window.print(); }); }
+  }
+
+  function fallbackCopy(text, btn) {
+    var t = document.createElement('textarea');
+    t.value = text;
+    t.setAttribute('readonly', 'readonly');
+    t.style.position = 'fixed';
+    t.style.top = '-1000px';
+    document.body.appendChild(t);
+    t.select();
+    try { document.execCommand('copy'); btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy summary'; }, 1600); }
+    catch (e) { btn.textContent = 'Copy failed'; setTimeout(function () { btn.textContent = 'Copy summary'; }, 1600); }
+    if (t.parentNode) { t.parentNode.removeChild(t); }
+  }
+
+  /* ---------- markdown export ---------- */
+  function toMarkdown(d) {
+    if (!d) { return ''; }
+    var L = [], i;
+    var c = d.course || {}, ins = d.instructor || {};
+    L.push('# ' + (has(c.title) ? c.title : 'Course summary'));
+    var sub = [];
+    if (has(c.code)) { sub.push(c.code); }
+    if (has(c.term)) { sub.push(c.term); }
+    if (has(c.credits)) { sub.push(c.credits + ' credits'); }
+    if (sub.length) { L.push('*' + sub.join(' \u00b7 ') + '*'); }
+    L.push('');
+
+    var pairs = [['Instructor', ins.name], ['Email', ins.email], ['Office', ins.office],
+                 ['Office hours', ins.officeHours], ['Meets', c.meeting], ['Location', c.location],
+                 ['Modality', c.modality], ['Teaching assistant', ins.ta]];
+    for (i = 0; i < pairs.length; i++) {
+      if (has(pairs[i][1])) { L.push('**' + pairs[i][0] + ':** ' + pairs[i][1]); }
+    }
+    if (has(d.workload)) { L.push(''); L.push('**Workload:** ' + d.workload); }
+
+    if (d.grading.scheme.length) {
+      L.push('', '## Grading', '', '| Component | Weight |', '| --- | --- |');
+      for (i = 0; i < d.grading.scheme.length; i++) {
+        var s = d.grading.scheme[i];
+        var w = parseFloat(s.weight);
+        L.push('| ' + s.item + ' | ' + (isNaN(w) ? '' : trimNum(w) + '%') + ' |');
+      }
+    }
+    if (d.grading.scale.length) {
+      L.push('', '**Scale:** ' + d.grading.scale.map(function (x) { return x.grade + ' ' + x.range; }).join(', '));
+    }
+
+    if (d.dates.length) {
+      L.push('', '## Key dates', '', '| Date | What | Type |', '| --- | --- | --- |');
+      for (i = 0; i < d.dates.length; i++) {
+        var e = d.dates[i];
+        L.push('| ' + (has(e.display) ? e.display : (e.iso || 'TBD')) + ' | ' + (e.label || '') +
+          (has(e.note) ? ' (' + e.note + ')' : '') + ' | ' + normType(e.type) + ' |');
+      }
+    }
+
+    if (d.materials.length) {
+      L.push('', '## Materials', '');
+      for (i = 0; i < d.materials.length; i++) {
+        var m = d.materials[i];
+        L.push('* ' + (m.required !== false ? '**Required.** ' : 'Optional. ') + m.name + (has(m.note) ? ' ' + m.note : ''));
+      }
+    }
+
+    L.push('', '## Policies', '');
+    for (i = 0; i < POLICY_FIELDS.length; i++) {
+      var f = POLICY_FIELDS[i];
+      var v = (d.policies || {})[f.k];
+      if (has(v)) { L.push('**' + f.label + '.** ' + v, ''); }
+      else if (f.k === 'ai') { L.push('**AI and generative tools.** Not addressed in the syllabus.', ''); }
+      else if (f.k === 'attendance') { L.push('**Attendance.** Not addressed in the syllabus.', ''); }
+    }
+
+    if (d.watch.length) {
+      L.push('## Easy to miss', '');
+      for (i = 0; i < d.watch.length; i++) { L.push('* ' + d.watch[i]); }
+    }
+
+    var sess = load(K_SESSION, '');
+    L.push('', '---', '');
+    L.push('Summarized with Syllabus Skimmer' + (sess ? ' (' + sess + ')' : '') +
+      ', day 090 of AppADay: https://augustineiacopelli.github.io/appaday/');
+    L.push('', 'Always confirm against the original syllabus. This is a reading aid, not the authority.');
+    return L.join('\n');
+  }
+
+  /* ---------- sample ---------- */
+  var SAMPLE = [
+    'BSAN 7010 \u2014 Foundations of Business Analytics',
+    'Fall 2026 \u00b7 3 credit hours \u00b7 Hybrid (Tuesdays in person, asynchronous Thursdays)',
+    'Meets Tuesdays 6:00\u20138:40 p.m., Clinton Hall 126. Asynchronous module due each Thursday by 11:59 p.m.',
+    '',
+    'Instructor: Dr. Marisol Vance',
+    'Email: m.vance@example.edu (48-hour response window on weekdays)',
+    'Office: Clinton Hall 314. Office hours Tuesdays 4:30\u20135:45 p.m. and by appointment via Zoom.',
+    'Graduate teaching assistant: Rahul Menon, r.menon@example.edu',
+    '',
+    'COURSE DESCRIPTION',
+    'An applied introduction to the analytics workflow: framing a business question, acquiring and cleaning data,',
+    'exploratory analysis, regression and classification fundamentals, and communicating results to a',
+    'non-technical audience. Python and SQL are used throughout. No prior programming experience is assumed.',
+    '',
+    'REQUIRED MATERIALS',
+    'Provost & Fawcett, Data Science for Business, 2nd ed. (O\u2019Reilly). ISBN 978-1449361327.',
+    'Anaconda Python distribution (free download, install before week 2).',
+    'Tableau Desktop \u2014 free student license, request code in week 1.',
+    'Recommended but not required: Wickham, R for Data Science, available free online.',
+    '',
+    'GRADING',
+    'Weekly lab notebooks (10 @ 20 pts) .......... 200 points',
+    'Two midterm exams (150 pts each) ............ 300 points',
+    'Capstone analytics project .................. 300 points',
+    'Discussion board participation .............. 100 points',
+    'Final presentation .......................... 100 points',
+    'Total ....................................... 1000 points',
+    '',
+    'Grading scale: A 93\u2013100, A- 90\u201392, B+ 87\u201389, B 83\u201386, B- 80\u201382, C+ 77\u201379, C 70\u201376, F below 70.',
+    'A grade below B- in any core MSBA course requires a repeat before progressing.',
+    '',
+    'SCHEDULE OF MAJOR DATES',
+    'Aug 25 \u2014 First class meeting. Tableau license request due.',
+    'Sep 1 \u2014 Lab 1 due. Python environment check.',
+    'Sep 8 \u2014 Last day to drop with full refund.',
+    'Sep 29 \u2014 Midterm Exam 1 (in class, proctored).',
+    'Oct 6 \u2014 Capstone project proposal due, 2 pages.',
+    'Oct 13\u201314 \u2014 Fall break, no class.',
+    'Nov 3 \u2014 Midterm Exam 2 (in class, proctored).',
+    'Nov 10 \u2014 Capstone interim deliverable: cleaned dataset and EDA notebook.',
+    'Nov 25\u201328 \u2014 Thanksgiving recess.',
+    'Dec 1 \u2014 Final presentations, session A.',
+    'Dec 8 \u2014 Final presentations, session B. Capstone written report due 11:59 p.m.',
+    '',
+    'ATTENDANCE',
+    'In-person attendance is expected at every Tuesday session. More than two unexcused absences lowers the',
+    'final course grade by one full letter. Arriving more than 20 minutes late counts as half an absence.',
+    'Asynchronous Thursday modules are tracked through the LMS and count toward attendance.',
+    '',
+    'LATE WORK',
+    'Lab notebooks lose 20% per calendar day late and are not accepted after 72 hours. Capstone deliverables',
+    'are not accepted late under any circumstances except documented emergency with department approval.',
+    '',
+    'GENERATIVE AI POLICY',
+    'Generative AI tools including ChatGPT and Claude are permitted for debugging code, explaining concepts,',
+    'and improving the clarity of your written prose. They are not permitted for generating analysis,',
+    'interpreting results, or writing the discussion sections of the capstone. Any use of AI must be disclosed',
+    'in a short appendix naming the tool, the purpose, and the prompts used. Undisclosed use is treated as an',
+    'academic integrity violation.',
+    '',
+    'ACADEMIC INTEGRITY',
+    'All work is governed by the university Student Code of Conduct. Collaboration on labs is encouraged, but',
+    'each student submits their own notebook with their own code and commentary. Exams are individual.',
+    '',
+    'ACCOMMODATIONS',
+    'Students with documented disabilities should contact the Office of Disability Services in the first two',
+    'weeks so that accommodations can be arranged.',
+    '',
+    'EXPECTED WORKLOAD',
+    'Plan on roughly 9 to 12 hours per week outside of class, weighted toward the capstone in November.'
+  ].join('\n');
+
+  sampleBtn.addEventListener('click', function () {
+    clearAttachment();
+    ta.value = SAMPLE;
+    updateCounter();
+    showNotice('Sample MSBA syllabus loaded. Press Skim it.', 'info');
+    ta.scrollTop = 0;
+  });
+
+  runBtn.addEventListener('click', skim);
+
+  ta.addEventListener('keydown', function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); skim(); }
+  });
+
+  /* ---------- boot ---------- */
+  (function boot() {
+    updateCounter();
+    markGear();
+    var last = load(K_LAST, '');
+    if (last) {
+      try {
+        current = normalize(JSON.parse(last));
+        render();
+      } catch (e) { current = null; }
+    }
+    if (!hasKey()) {
+      showNotice('Add your Anthropic API key in Settings (the gear, top right) to start skimming.', 'info');
+    }
+  })();
+
+})();
+</script>
+</body>
+</html>
