@@ -212,8 +212,42 @@
     border: 1px solid var(--rust-soft);
     background: #fdf3f0;
     color: #7d2f1f;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
   }
   .notice.info { border-color: var(--teal-soft); background: #edf6f4; color: #0b544c; }
+  .notice .n-msg { flex: 1 1 auto; min-width: 0; }
+  .notice .n-msg strong { display: block; margin-bottom: 2px; }
+  .notice .n-x {
+    flex: 0 0 auto;
+    background: transparent;
+    border: 1px solid currentColor;
+    color: inherit;
+    opacity: .6;
+    border-radius: 7px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .notice .n-x:hover { opacity: 1; }
+
+  .rawbox {
+    max-height: 280px;
+    overflow: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: var(--paper);
+    border: 1px solid var(--rule-2);
+    border-radius: 9px;
+    padding: 12px;
+    margin: 0 0 12px;
+  }
+  .diag-note { font-size: 14px; margin: 0 0 12px; }
+  .diag-note code { background: var(--paper); border: 1px solid var(--rule); border-radius: 5px; padding: 1px 5px; font-size: 12.5px; }
   .hidden { display: none !important; }
 
   /* ---------- loading ---------- */
@@ -373,7 +407,7 @@
   .field input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-soft); }
   .field .hint { font-size: 12.5px; color: var(--ink-3); margin-top: 5px; }
   .field .hint a { color: var(--teal); }
-  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+  .modal-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: 18px; }
 
   /* ---------- footer ---------- */
   footer {
@@ -466,9 +500,11 @@
       <div class="hint">Optional label printed on exported summaries.</div>
     </div>
     <div class="modal-actions">
+      <button class="btn" id="test" type="button">Test connection</button>
       <button class="btn" id="cancel" type="button">Cancel</button>
       <button class="btn btn-primary" id="save" type="button">Save</button>
     </div>
+    <div id="testresult"></div>
   </div>
 </div>
 
@@ -487,12 +523,25 @@
   var SEG_COLORS = ['#0e6a60', '#c8801c', '#a8402c', '#4c5a6b', '#6a4a86', '#3f7d4e', '#96683a', '#2f6d86', '#8a3a63', '#5c6b2f'];
 
   /* ---------- storage helpers ---------- */
+  var memStore = {};
+  var storageOK = (function () {
+    try {
+      var probe = '__appaday090__';
+      localStorage.setItem(probe, '1');
+      localStorage.removeItem(probe);
+      return true;
+    } catch (e) { return false; }
+  })();
+
   function load(k, fallback) {
+    if (!storageOK) { return Object.prototype.hasOwnProperty.call(memStore, k) ? memStore[k] : fallback; }
     try { var v = localStorage.getItem(k); return v === null ? fallback : v; }
-    catch (e) { return fallback; }
+    catch (e) { return Object.prototype.hasOwnProperty.call(memStore, k) ? memStore[k] : fallback; }
   }
   function save(k, v) {
-    try { localStorage.setItem(k, v); } catch (e) { /* private mode */ }
+    memStore[k] = v;
+    if (!storageOK) { return; }
+    try { localStorage.setItem(k, v); } catch (e) { storageOK = false; }
   }
 
   /* ---------- element refs ---------- */
@@ -516,6 +565,8 @@
   function openSettings() {
     keyIn.value = load(K_KEY, '');
     sessIn.value = load(K_SESSION, '');
+    var tr = document.getElementById('testresult');
+    if (tr) { tr.innerHTML = ''; }
     overlay.classList.remove('hidden');
     setTimeout(function () { keyIn.focus(); }, 40);
   }
@@ -530,22 +581,66 @@
     closeSettings();
     showNotice('Settings saved.', 'info');
   });
-  overlay.addEventListener('click', function (e) { if (e.target === overlay) { closeSettings(); } });
-  document.addEventListener('keydown', function (e) {
+  var testBtn = $('test'), testOut = $('testresult');
+  testBtn.addEventListener('click', function () {
+    var key = keyIn.value.trim();
+    if (!key) { testOut.innerHTML = '<div class="notice">Paste a key first.</div>'; return; }
+    testBtn.disabled = true;
+    testBtn.textContent = 'Testing';
+    testOut.innerHTML = '<div class="notice info">Sending a one-word request to ' + esc(CLAUDE_MODEL) + '.</div>';
+
+    fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: 16,
+        messages: [{ role: 'user', content: 'Reply with the single word OK.' }]
+      })
+    }).then(function (res) {
+      return res.text().then(function (body) {
+        var data = null;
+        try { data = JSON.parse(body); } catch (e2) { /* not JSON */ }
+        return { ok: res.ok, status: res.status, data: data, body: body };
+      });
+    }, function (netErr) { throw netError(netErr); }).then(function (r) {
+      if (!r.ok) { throw apiError(r); }
+      testOut.innerHTML = '<div class="notice info">Connected. ' + esc(CLAUDE_MODEL) +
+        ' answered normally, so the key and the network are both fine.</div>';
+    })['catch'](function (err) {
+      testOut.innerHTML = '<div class="notice"><span class="n-msg"><strong>' +
+        esc(err.title || 'Test failed') + '</strong>' + esc(err.message || String(err)) + '</span></div>';
+    }).then(function () {
+      testBtn.disabled = false;
+      testBtn.textContent = 'Test connection';
+    });
+  });
+
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) { closeSettings(); } });  document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && !overlay.classList.contains('hidden')) { closeSettings(); }
   });
 
   /* ---------- notices ---------- */
   var noticeTimer = null;
-  function showNotice(msg, kind) {
-    notice.textContent = msg;
-    notice.className = 'notice' + (kind === 'info' ? ' info' : '');
-    if (noticeTimer) { clearTimeout(noticeTimer); }
-    noticeTimer = setTimeout(function () { notice.className = 'notice hidden'; }, 7000);
+  function showNotice(msg, kind, title) {
+    var isInfo = (kind === 'info');
+    notice.className = 'notice' + (isInfo ? ' info' : '');
+    notice.innerHTML = '<span class="n-msg">' +
+      (title ? '<strong>' + esc(title) + '</strong>' : '') + esc(msg) + '</span>' +
+      '<button class="n-x" type="button">Dismiss</button>';
+    notice.querySelector('.n-x').addEventListener('click', hideNotice);
+    if (noticeTimer) { clearTimeout(noticeTimer); noticeTimer = null; }
+    if (isInfo) { noticeTimer = setTimeout(hideNotice, 7000); }
   }
   function hideNotice() {
-    if (noticeTimer) { clearTimeout(noticeTimer); }
+    if (noticeTimer) { clearTimeout(noticeTimer); noticeTimer = null; }
     notice.className = 'notice hidden';
+    notice.innerHTML = '';
   }
 
   /* ---------- counter ---------- */
@@ -782,35 +877,130 @@
       },
       body: JSON.stringify({
         model: CLAUDE_MODEL,
-        max_tokens: 4000,
+        max_tokens: 16000,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: content }]
       })
     }).then(function (res) {
-      return res.json().then(function (data) { return { ok: res.ok, status: res.status, data: data }; });
+      return res.text().then(function (body) {
+        var data = null;
+        try { data = JSON.parse(body); } catch (e) { /* not JSON */ }
+        return { ok: res.ok, status: res.status, data: data, body: body };
+      });
+    }, function (netErr) {
+      throw netError(netErr);
     }).then(function (r) {
-      if (!r.ok) {
-        var m = (r.data && r.data.error && r.data.error.message) ? r.data.error.message : ('Request failed with status ' + r.status + '.');
-        throw new Error(m);
-      }
+      if (!r.ok) { throw apiError(r); }
+      if (!r.data) { throw new SkimError('The API replied with something that was not JSON.', r.body, 'Unreadable reply'); }
+
       var raw = (r.data.content || [])
         .filter(function (b) { return b.type === 'text'; })
         .map(function (b) { return b.text; })
         .join('\n');
+
+      if (r.data.stop_reason === 'max_tokens') {
+        throw new SkimError(
+          'The extraction was cut off before it finished, so the result could not be read. This syllabus produces ' +
+          'more structured output than one response can hold. Try skimming it in halves: the front matter and ' +
+          'policies first, then the schedule.', raw, 'Response ran out of room');
+      }
+      if (!raw.trim()) {
+        throw new SkimError('The API returned an empty response. Stop reason was ' +
+          (r.data.stop_reason || 'not given') + '.', r.body, 'Empty response');
+      }
+
       var parsed = parseJSON(raw);
-      if (!parsed) { throw new Error('The response could not be read as structured data. Try again, or trim the syllabus to its core sections.'); }
+      if (!parsed) {
+        throw new SkimError('The response came back but was not valid JSON, so nothing could be laid out. ' +
+          'The raw text is below; retrying usually clears it.', raw, 'Could not parse the result');
+      }
+
       current = normalize(parsed);
       try { save(K_LAST, JSON.stringify(current)); } catch (e) { /* too large */ }
       dateFilter = 'all';
       render();
       out.scrollIntoView({ behavior: 'smooth', block: 'start' });
     })['catch'](function (err) {
-      renderEmpty();
-      showNotice(err && err.message ? err.message : 'Something went wrong reaching the API.');
+      var e = (err instanceof SkimError) ? err : new SkimError(err && err.message ? err.message : 'Something went wrong reaching the API.', '');
+      renderDiagnostic(e);
+      showNotice(e.message, 'error', e.title || 'That did not work');
     }).then(function () {
       runBtn.disabled = false;
       runBtn.textContent = 'Skim it';
     });
+  }
+
+  /* ---------- error plumbing ---------- */
+  function SkimError(message, raw, title, hint) {
+    this.message = message;
+    this.raw = raw || '';
+    this.title = title || '';
+    this.hint = hint || '';
+  }
+  SkimError.prototype = Object.create(Error.prototype);
+  SkimError.prototype.constructor = SkimError;
+
+  function netError(err) {
+    var local = (location.protocol === 'file:');
+    var msg = local
+      ? 'The browser blocked the request because this page was opened straight from disk. Anthropic rejects ' +
+        'requests with a null origin. Serve the folder over http instead, for example by running ' +
+        'python3 -m http.server 8000 in it and opening localhost:8000, or just use the published GitHub Pages URL.'
+      : 'The request never reached Anthropic. That is usually no network connection, a browser extension or ' +
+        'corporate proxy blocking api.anthropic.com, or the request being blocked before it left the page. ' +
+        'The underlying error was: ' + (err && err.message ? err.message : 'unknown') + '.';
+    return new SkimError(msg, '', local ? 'Blocked by the browser, not by the API' : 'Could not reach the API');
+  }
+
+  function apiError(r) {
+    var e = r.data && r.data.error ? r.data.error : null;
+    var detail = e && e.message ? e.message : (r.body ? r.body.slice(0, 400) : 'No detail returned.');
+    var title = 'Request failed with status ' + r.status;
+    var msg;
+    if (r.status === 401) {
+      msg = 'The API key was rejected. Open Settings and check that the whole key was pasted, with no trailing ' +
+        'space, and that it is still active in the Anthropic console. Detail: ' + detail;
+      title = 'Key rejected';
+    } else if (r.status === 403) {
+      msg = 'The key is valid but not permitted to use this model. Detail: ' + detail;
+      title = 'Not permitted';
+    } else if (r.status === 404) {
+      msg = 'The model ' + CLAUDE_MODEL + ' was not found for this key. Detail: ' + detail;
+      title = 'Model not found';
+    } else if (r.status === 400) {
+      msg = 'Anthropic rejected the request as malformed. If a PDF is attached, it may be encrypted, corrupt, ' +
+        'or over the page limit. Detail: ' + detail;
+      title = 'Request rejected';
+    } else if (r.status === 413) {
+      msg = 'The file was too large for the API to accept. Export a smaller PDF or paste the text. Detail: ' + detail;
+      title = 'Too large';
+    } else if (r.status === 429) {
+      msg = 'Rate limited, or the account is out of credit. Wait a moment and try again, and check the balance ' +
+        'in the Anthropic console. Detail: ' + detail;
+      title = 'Rate limited';
+    } else if (r.status >= 500) {
+      msg = 'Anthropic returned a server error. This is usually temporary. Detail: ' + detail;
+      title = 'Server error';
+    } else {
+      msg = detail;
+    }
+    return new SkimError(msg, r.body || '', title);
+  }
+
+  function renderDiagnostic(e) {
+    var html = '<section class="sheet"><div class="sheet-head"><h3>' + esc(e.title || 'That did not work') + '</h3>' +
+      '<span class="tag">Diagnostic</span></div><div class="sheet-body">' +
+      '<p class="diag-note">' + esc(e.message) + '</p>';
+    if (e.raw) {
+      html += '<div class="rawbox">' + esc(String(e.raw).slice(0, 8000)) + '</div>';
+    }
+    html += '<div class="exportrow"><button class="btn" type="button" id="retry">Try again</button>' +
+      '<button class="btn" type="button" id="opensettings">Open settings</button></div>' +
+      '</div></section>';
+    out.innerHTML = html;
+    var rt = $('retry'), os = $('opensettings');
+    if (rt) { rt.addEventListener('click', skim); }
+    if (os) { os.addEventListener('click', openSettings); }
   }
 
   function parseJSON(raw) {
@@ -1296,6 +1486,14 @@
     }
     if (!hasKey()) {
       showNotice('Add your Anthropic API key in Settings (the gear, top right) to start skimming.', 'info');
+    } else if (!storageOK) {
+      showNotice('This browser is not letting the page save anything, so your key will be forgotten when the tab closes. ' +
+        'Everything still works for this session.', 'info', 'Settings will not persist');
+    }
+    if (!storageOK && !hasKey()) {
+      showNotice('This page cannot save to browser storage, which usually means it was opened straight from disk ' +
+        'rather than over http. Your key will work for this session but will not be remembered. Add it in Settings ' +
+        'to continue.', 'info', 'Storage unavailable');
     }
   })();
 
