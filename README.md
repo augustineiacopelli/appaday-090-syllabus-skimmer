@@ -44,9 +44,17 @@ Keyboard: `Cmd`/`Ctrl` + `Enter` in the textarea runs the skim. `Esc` closes Set
 
 ## Technical
 
-A single self-contained `index.html`. Vanilla HTML, CSS, and JavaScript with no framework, no build step, and no dependency beyond Google Fonts. Claude is called directly from the browser with `anthropic-dangerous-direct-browser-access`, using `claude-sonnet-5`, and is prompted to return a single JSON object matching a fixed schema, which is then parsed defensively and rendered. PDFs and images are base64 encoded in the browser with `FileReader` and sent as native document and image content blocks, so there is no client-side PDF parsing library and nothing to bundle. Pasted input is capped at 60,000 characters per pass and uploads at 25 MB.
+A single self-contained `index.html`. Vanilla HTML, CSS, and JavaScript with no framework, no build step, and no dependency beyond Google Fonts. Claude is called directly from the browser with `anthropic-dangerous-direct-browser-access`, using `claude-sonnet-5`, and is prompted to return a single JSON object matching a fixed schema, which is then parsed defensively and rendered. PDFs and images are base64 encoded in the browser with `FileReader` and sent as native document and image content blocks, so there is no client-side PDF parsing library and nothing to bundle. Pasted input is capped at 60,000 characters per pass and uploads at 25 MB. The response budget is 16,000 tokens, which comfortably holds a sixteen-week schedule with a full plus-minus grade scale.
 
 Fraunces for display type, Inter for everything else. Paper and ink palette with a deep teal accent. Fully responsive from a 375px phone to a wide desktop, with a two-column split for grading and materials above 760px and a dedicated print stylesheet.
+
+## When it fails
+
+Every failure now says what happened instead of flashing a vague line that disappears. Error notices stay on screen until dismissed, and the result area renders a diagnostic panel with the raw response, a Try again button, and a shortcut to Settings.
+
+Settings also has a **Test connection** button that sends a single one-word request. If the key or the network is the problem, that answers it in one click without spending a syllabus.
+
+Two failure modes worth knowing about. First, if the page is opened directly off disk with a `file://` address, the browser sends a null origin and Anthropic rejects it; the app detects this and tells you to serve the folder over http instead. Second, some browsers block storage on that same opaque origin, which used to mean the API key silently refused to save and Skim it just reopened Settings forever. Settings now fall back to in-memory storage for the session and say so plainly.
 
 ## Caveat
 
