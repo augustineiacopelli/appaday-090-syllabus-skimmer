@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="manifest" href="https://augustineiacopelli.github.io/appaday/manifests/090.webmanifest">
 <script src="https://augustineiacopelli.github.io/appaday/save.js" defer></script>
+<script src="https://augustineiacopelli.github.io/appaday/keys.js" data-app="090" data-legacy-key="appaday090-key" data-accent="#1F7A8C" defer></script>
 <title>Syllabus Skimmer | AppADay 090</title>
 <meta name="description" content="Upload a syllabus PDF or paste the text and get a clean summary card: key dates, grading breakdown, required materials, and the attendance and AI policies pulled out and organized.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -496,11 +497,7 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <h2 id="modal-title">Settings</h2>
     <p>Stored in this browser only. Never committed, never sent anywhere except to Anthropic.</p>
-    <div class="field">
-      <label for="key">Anthropic API key</label>
-      <input id="key" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
-      <div class="hint">Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</div>
-    </div>
+    <div class="field" id="keyMount"><div class="hint">The key manager is loading. If this stays, check your connection and reload.</div></div>
     <div class="field">
       <label for="session">Session name</label>
       <input id="session" type="text" placeholder="Fall 2026 MSBA" autocomplete="off">
@@ -521,7 +518,6 @@
 
   var CLAUDE_MODEL = 'claude-sonnet-5';
   var API_URL = 'https://api.anthropic.com/v1/messages';
-  var K_KEY = 'appaday090-key';
   var K_SESSION = 'appaday090-session';
   var K_LAST = 'appaday090-last';
   var MAX_CHARS = 60000;
@@ -556,13 +552,13 @@
   var ta = $('syllabus'), counter = $('counter'), notice = $('notice');
   var runBtn = $('run'), sampleBtn = $('sample'), clearBtn = $('clear');
   var out = $('output'), overlay = $('overlay'), gear = $('gear');
-  var keyIn = $('key'), sessIn = $('session');
+  var sessIn = $('session');
 
   var current = null;
   var dateFilter = 'all';
 
   /* ---------- settings ---------- */
-  function hasKey() { return load(K_KEY, '').trim().length > 0; }
+  function hasKey() { return !!(window.AppKeys && window.AppKeys.has()); }
 
   function markGear() {
     if (hasKey()) { gear.className = 'icon-btn'; }
@@ -570,28 +566,26 @@
   }
 
   function openSettings() {
-    keyIn.value = load(K_KEY, '');
+    if (window.AppKeys) { window.AppKeys.mountSettings($('keyMount')); }
     sessIn.value = load(K_SESSION, '');
     var tr = document.getElementById('testresult');
     if (tr) { tr.innerHTML = ''; }
     overlay.classList.remove('hidden');
-    setTimeout(function () { keyIn.focus(); }, 40);
   }
   function closeSettings() { overlay.classList.add('hidden'); }
 
   gear.addEventListener('click', openSettings);
   $('cancel').addEventListener('click', closeSettings);
   $('save').addEventListener('click', function () {
-    save(K_KEY, keyIn.value.trim());
     save(K_SESSION, sessIn.value.trim());
     markGear();
     closeSettings();
     showNotice('Settings saved.', 'info');
   });
   var testBtn = $('test'), testOut = $('testresult');
-  testBtn.addEventListener('click', function () {
-    var key = keyIn.value.trim();
-    if (!key) { testOut.innerHTML = '<div class="notice">Paste a key first.</div>'; return; }
+  testBtn.addEventListener('click', async function () {
+    var key = hasKey() ? await window.AppKeys.get() : '';
+    if (!key) { testOut.innerHTML = '<div class="notice">Add a key above first.</div>'; return; }
     testBtn.disabled = true;
     testBtn.textContent = 'Testing';
     testOut.innerHTML = '<div class="notice info">Sending a one-word request to ' + esc(CLAUDE_MODEL) + '.</div>';
@@ -850,10 +844,12 @@
   });
 
   /* ---------- API call ---------- */
-  function skim() {
+  async function skim() {
     var text = ta.value.trim();
     if (!attached && !text) { showNotice('Upload a syllabus or paste one first, or press Load sample to try it out.'); ta.focus(); return; }
-    if (!hasKey()) { showNotice('Add your Anthropic API key in Settings first.'); openSettings(); return; }
+    if (!window.AppKeys) { showNotice('The key manager did not load. Check your connection and reload.'); return; }
+    var apiKey = await window.AppKeys.get();
+    if (!apiKey) { showNotice('Add your Claude API key with the gear button to start skimming.'); return; }
     if (!attached && text.length > MAX_CHARS) {
       showNotice('That is longer than ' + MAX_CHARS.toLocaleString() + ' characters. Trimming to the first ' + MAX_CHARS.toLocaleString() + ' for this pass.', 'info');
       text = text.slice(0, MAX_CHARS);
@@ -878,7 +874,7 @@
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': load(K_KEY, ''),
+        'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
@@ -1491,17 +1487,13 @@
         render();
       } catch (e) { current = null; }
     }
-    if (!hasKey()) {
-      showNotice('Add your Anthropic API key in Settings (the gear, top right) to start skimming.', 'info');
-    } else if (!storageOK) {
-      showNotice('This browser is not letting the page save anything, so your key will be forgotten when the tab closes. ' +
-        'Everything still works for this session.', 'info', 'Settings will not persist');
-    }
-    if (!storageOK && !hasKey()) {
-      showNotice('This page cannot save to browser storage, which usually means it was opened straight from disk ' +
-        'rather than over http. Your key will work for this session but will not be remembered. Add it in Settings ' +
-        'to continue.', 'info', 'Storage unavailable');
-    }
+    window.addEventListener('appaday:keychange', markGear);
+    document.addEventListener('DOMContentLoaded', function () {
+      markGear();
+      if (!hasKey()) {
+        showNotice('Add your Claude API key with the gear button (top right) to start skimming.', 'info');
+      }
+    });
   })();
 
 })();
