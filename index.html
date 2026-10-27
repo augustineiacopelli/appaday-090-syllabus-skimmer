@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="manifest" href="https://augustineiacopelli.github.io/appaday/manifests/090.webmanifest">
 <script src="https://augustineiacopelli.github.io/appaday/save.js" defer></script>
+<script src="https://augustineiacopelli.github.io/appaday/models.js"></script>
 <script src="https://augustineiacopelli.github.io/appaday/keys.js" data-app="090" data-legacy-key="appaday090-key" data-accent="#1F7A8C" defer></script>
 <title>Syllabus Skimmer | AppADay 090</title>
 <meta name="description" content="Upload a syllabus PDF or paste the text and get a clean summary card: key dates, grading breakdown, required materials, and the attendance and AI policies pulled out and organized.">
@@ -516,7 +517,7 @@
 (function () {
   "use strict";
 
-  var CLAUDE_MODEL = 'claude-sonnet-5';
+  var CLAUDE_MODEL = (window.AppModels ? window.AppModels.id('sonnet') : '');
   var API_URL = 'https://api.anthropic.com/v1/messages';
   var K_SESSION = 'appaday090-session';
   var K_LAST = 'appaday090-last';
@@ -1498,15 +1499,6 @@
 
 })();
 
-async function getModel(tier = 'sonnet') {
-  try {
-    const response = await fetch('../config.json');
-    const config = await response.json();
-    return config.models[tier];
-  } catch {
-    return 'claude-sonnet-5-5';
-  }
-}
 </script>
 </body>
 </html>
